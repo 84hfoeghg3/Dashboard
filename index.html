@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Technik Informatyk</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --text: #1a1a18;
+    --muted: #6b6b66;
+    --border: rgba(0,0,0,0.08);
+    --purple: #534AB7;
+    --purple-light: #EEEDFE;
+    --teal: #0F6E56;
+    --teal-light: #E1F5EE;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --green: #3B6D11;
+    --green-light: #EAF3DE;
+    --gray-light: #F1EFE8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --card: #26261f;
+      --text: #e8e6dc;
+      --muted: #9c9a8e;
+      --border: rgba(255,255,255,0.08);
+      --purple-light: #26215C;
+      --teal-light: #04342C;
+      --amber-light: #412402;
+      --red-light: #501313;
+      --green-light: #173404;
+      --gray-light: #2C2C2A;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+    line-height: 1.5;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .date-badge {
+    background: var(--purple-light);
+    color: var(--purple);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .grid-wide {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .grid, .grid-wide { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* Stats */
+  .stat-value {
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .stat-purple .stat-value { color: var(--purple); }
+  .stat-teal .stat-value { color: var(--teal); }
+  .stat-amber .stat-value { color: var(--amber); }
+
+  /* Tasks */
+  .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .task-item:hover { background: var(--gray-light); }
+
+  .task-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    margin-top: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .task-item.done .task-check {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+
+  .task-item.done .task-check::after {
+    content: '';
+    width: 6px; height: 4px;
+    border-left: 1.5px solid #fff;
+    border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translate(1px, -1px);
+    display: block;
+  }
+
+  .task-item.done .task-title { text-decoration: line-through; color: var(--muted); }
+
+  .task-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .task-meta { font-size: 12px; color: var(--muted); }
+
+  .task-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .tag-purple { background: var(--purple-light); color: var(--purple); }
+  .tag-teal   { background: var(--teal-light);   color: var(--teal); }
+  .tag-amber  { background: var(--amber-light);   color: var(--amber); }
+  .tag-red    { background: var(--red-light);     color: var(--red); }
+  .tag-green  { background: var(--green-light);   color: var(--green); }
+
+  /* Add task */
+  .add-task {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .add-task input {
+    flex: 1;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border 0.15s;
+  }
+
+  .add-task input:focus { border-color: var(--purple); }
+
+  .add-task button {
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--purple);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .add-task button:hover { opacity: 0.85; }
+
+  /* Schedule */
+  .schedule-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .schedule-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border-left: 3px solid;
+  }
+
+  .sch-purple { border-color: var(--purple); background: var(--purple-light); }
+  .sch-teal   { border-color: var(--teal);   background: var(--teal-light); }
+  .sch-amber  { border-color: var(--amber);  background: var(--amber-light); }
+  .sch-red    { border-color: #A32D2D;        background: var(--red-light); }
+  .sch-green  { border-color: #3B6D11;        background: var(--green-light); }
+  .sch-blue   { border-color: #185FA5;        background: #E6F1FB; }
+  .sch-indigo { border-color: #4338ca;        background: #eef2ff; }
+  .sch-pink   { border-color: #993556;        background: #FBEAF0; }
+  .sch-orange { border-color: #854F0B;        background: #FAEEDA; }
+  .sch-gray   { border-color: var(--muted);   background: var(--gray-light); }
+
+  @media (prefers-color-scheme: dark) {
+    .sch-blue   { border-color: #3B8BD4; background: #042C53; }
+    .sch-indigo { border-color: #6366f1; background: #1e1b4b; }
+    .sch-pink   { border-color: #D4537E; background: #4B1528; }
+    .sch-orange { border-color: #EF9F27; background: #412402; }
+  }
+
+  .sch-time { font-size: 12px; font-weight: 500; color: var(--muted); min-width: 50px; margin-top: 1px; }
+  .sch-name { font-size: 14px; font-weight: 500; }
+  .sch-room { font-size: 12px; color: var(--muted); }
+
+  /* Subjects progress */
+  .subject-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .subject-item { }
+  .subject-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .subject-name { font-weight: 500; }
+  .subject-grade { color: var(--muted); }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--gray-light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  /* Context */
+  .context-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .context-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .context-item:last-child { border-bottom: none; }
+  .context-key { color: var(--muted); }
+  .context-value { font-weight: 500; text-align: right; }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 24px;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Twój dashboard 📚</h1>
+    <p>Technik Informatyk · 3 rok · <span id="date-display"></span></p>
+  </div>
+  <div class="date-badge" id="week-badge"></div>
+</div>
+
+<!-- Statystyki -->
+<div class="grid">
+  <div class="card stat-purple">
+    <div class="card-title">Zadania do zrobienia</div>
+    <div class="stat-value" id="stat-todo">0</div>
+    <div class="stat-label">aktywnych zadań</div>
+  </div>
+  <div class="card stat-teal">
+    <div class="card-title">Ukończone dziś</div>
+    <div class="stat-value" id="stat-done">0</div>
+    <div class="stat-label">zadań gotowych</div>
+  </div>
+  <div class="card stat-amber">
+    <div class="card-title">Pilne / deadline</div>
+    <div class="stat-value" id="stat-urgent">0</div>
+    <div class="stat-label">wymaga uwagi</div>
+  </div>
+</div>
+
+<div class="grid-wide">
+  <!-- Lista zadań -->
+  <div class="card">
+    <div class="card-title">Zadania</div>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterTasks('all', this)">Wszystkie</button>
+      <button class="filter-btn" onclick="filterTasks('Szkoła', this)">🎓 Szkoła</button>
+      <button class="filter-btn" onclick="filterTasks('Projekt', this)">💻 Projekty</button>
+      <button class="filter-btn" onclick="filterTasks('Nauka', this)">📖 Nauka</button>
+      <button class="filter-btn" onclick="filterTasks('Inne', this)">📌 Inne</button>
+    </div>
+    <div class="task-list" id="task-list"></div>
+    <div class="add-task" style="flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="task-input" placeholder="Nazwa zadania..." onkeydown="if(event.key==='Enter') addTask()" style="flex:1">
+        <input type="text" id="task-deadline" placeholder="Deadline (np. 5 maja)" style="width:160px;padding:9px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);outline:none">
+      </div>
+      <div style="display:flex;gap:8px">
+        <select id="task-tag-select" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);outline:none">
+          <option value="Szkoła">🎓 Szkoła</option>
+          <option value="Nauka">📖 Nauka</option>
+          <option value="Projekt">💻 Projekt</option>
+          <option value="Inne">📌 Inne</option>
+        </select>
+        <button onclick="addTask()" style="padding:9px 20px;border-radius:8px;border:none;background:var(--purple);color:#fff;font-size:14px;font-weight:500;cursor:pointer">+ Dodaj</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plan dnia + kontekst -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="card">
+      <div class="card-title">Plan lekcji</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="filter-btn" id="day-btn-0" onclick="showDay(0,this)">Pon</button>
+        <button class="filter-btn" id="day-btn-1" onclick="showDay(1,this)">Wt</button>
+        <button class="filter-btn" id="day-btn-2" onclick="showDay(2,this)">Śr</button>
+        <button class="filter-btn" id="day-btn-3" onclick="showDay(3,this)">Czw</button>
+        <button class="filter-btn" id="day-btn-4" onclick="showDay(4,this)">Pt</button>
+      </div>
+      <div class="schedule-list" id="schedule-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mój kontekst</div>
+      <div class="context-list">
+        <div class="context-item"><span class="context-key">Szkoła</span><span class="context-value">Technikum</span></div>
+        <div class="context-item"><span class="context-key">Kierunek</span><span class="context-value">Technik Informatyk</span></div>
+        <div class="context-item"><span class="context-key">Rok</span><span class="context-value">3 / 4</span></div>
+        <div class="context-item"><span class="context-key">Narzędzia</span><span class="context-value">Gmail · Drive · Calendar</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Postęp przedmiotów -->
+<div class="card">
+  <div class="card-title">Postęp nauki (semestr 2)</div>
+  <div class="subject-list" id="subjects-list"></div>
+</div>
+
+<!-- Kalkulator ocen -->
+<div class="card" style="margin-top:16px">
+  <div class="card-title">Kalkulator ocen</div>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Wybierz przedmiot i docelową średnią — zobaczysz jaką ocenę musisz dostać.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div>
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Przedmiot</label>
+      <select id="calc-subject" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);outline:none"></select>
+    </div>
+    <div>
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Docelowa średnia</label>
+      <select id="calc-target" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);outline:none">
+        <option value="3.0">3,0</option>
+        <option value="3.5">3,5</option>
+        <option value="4.0" selected>4,0</option>
+        <option value="4.5">4,5</option>
+        <option value="5.0">5,0</option>
+        <option value="5.5">5,5</option>
+        <option value="6.0">6,0</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+    <label style="font-size:12px;color:var(--muted);white-space:nowrap">Ile ocen jeszcze dostanę?</label>
+    <input type="number" id="calc-future" min="1" max="10" value="1" style="width:70px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);outline:none">
+  </div>
+
+  <button onclick="calcGrade()" style="padding:10px 20px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;width:100%">Oblicz</button>
+
+  <div id="calc-result" style="margin-top:16px;display:none">
+    <div id="calc-result-inner" style="padding:16px;border-radius:8px;border:1px solid var(--border)"></div>
+  </div>
+</div>
+
+<!-- Pełna lista zadań -->
+<div class="card" style="margin-top:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div class="card-title" style="margin-bottom:0">Pełna lista zadań</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="filter-btn active" id="full-btn-all" onclick="filterFull('all',this)">Wszystkie</button>
+      <button class="filter-btn" id="full-btn-todo" onclick="filterFull('todo',this)">Do zrobienia</button>
+      <button class="filter-btn" id="full-btn-done" onclick="filterFull('done',this)">Ukończone</button>
+    </div>
+  </div>
+  <div id="full-task-list"></div>
+</div>
+
+<script>
+// --- Data & state ---
+const STORAGE_KEY = 'dashboard_tasks_v1';
+
+function gradeColor(avg) {
+  if (avg >= 5.0) return '#0F6E56';
+  if (avg >= 4.0) return '#3B8BD4';
+  if (avg >= 3.0) return '#BA7517';
+  return '#A32D2D';
+}
+const subjects = [
+  { name: 'Język angielski', avg: 4.00 },       // 4,4,4
+  { name: 'Historia', avg: 4.50 },              // 5,5,4,4 (0 = brak zadania, nie liczone)
+  { name: 'Proj. i admin. baz danych', avg: 4.67 }, // 4,5,5
+  { name: 'Chemia', avg: 4.89 },                // 6,5,5,5,5,4,5,4,5
+  { name: 'Matematyka', avg: 3.00 },            // 4,3,2,3
+  { name: 'Język niemiecki', avg: 4.00 },        // 5,3,3,5
+  { name: 'Ang. w branży teleinf.', avg: 4.00 },// 5,3,3,5 (bez "nie liczona")
+  { name: 'Wychowanie fizyczne', avg: 5.00 },   // 5,5,5
+  { name: 'Historia i teraźniejszość', avg: 5.33 }, // 6,5,5
+  { name: 'Język polski', avg: 2.67 },          // 1,3,4
+  { name: 'Sieci komputerowe', avg: 4.80 },     // 5,5,5,4,5
+  { name: 'Proj. stron internetowych', avg: 3.67 }, // 5,3,3
+  { name: 'Informatyka', avg: 4.50 },           // 4,5 (bez "np")
+  { name: 'Prog. aplikacji internet.', avg: 5.00 }, // 5,5
+].map(s => ({ ...s, pct: Math.round(s.avg/6*100), color: gradeColor(s.avg) }));
+
+const TASKS_VERSION = 'v2';
+if (localStorage.getItem(STORAGE_KEY + '_version') !== TASKS_VERSION) {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.setItem(STORAGE_KEY + '_version', TASKS_VERSION);
+}
+
+let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+if (!tasks.length) {
+  tasks = [
+    { id: 1, title: 'Sprawdzian z matematyki — geometria analityczna', tag: 'Szkoła', done: false, urgent: true, deadline: '31 marca' },
+    { id: 2, title: 'Powtórka do sprawdzianu z matmy', tag: 'Nauka', done: false, urgent: true, deadline: '31 marca' },
+    { id: 3, title: 'Zadanie domowe z angielskiego — mówienie ustnie', tag: 'Szkoła', done: false, urgent: true, deadline: '3 kwietnia' },
+    { id: 4, title: 'Prezentacja na chemię', tag: 'Szkoła', done: false, urgent: false, deadline: '7 kwietnia' },
+    { id: 5, title: 'Prezentacja na angielski zawodowy', tag: 'Szkoła', done: false, urgent: false, deadline: '7 kwietnia' },
+    { id: 6, title: 'Kartkówka z chemii — kwasy karboksylowe i estry', tag: 'Szkoła', done: false, urgent: false, deadline: '8 kwietnia' },
+    { id: 7, title: 'Sprawdzian z języka polskiego — Lalka', tag: 'Szkoła', done: false, urgent: false, deadline: '13 kwietnia' },
+  ];
+  save();
+}
+
+// --- Helpers ---
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+function nextId() { return tasks.length ? Math.max(...tasks.map(t=>t.id)) + 1 : 1; }
+
+function tagClass(tag) {
+  return { 'Szkoła': 'tag-purple', 'Projekt': 'tag-teal', 'Nauka': 'tag-amber', 'Inne': 'tag-green' }[tag] || 'tag-green';
+}
+
+const MONTHS = { 'stycznia':0,'lutego':1,'marca':2,'kwietnia':3,'maja':4,'czerwca':5,'lipca':6,'sierpnia':7,'września':8,'października':9,'listopada':10,'grudnia':11 };
+
+function daysLeft(deadlineStr) {
+  if (!deadlineStr) return null;
+  const parts = deadlineStr.trim().split(' ');
+  if (parts.length < 2) return null;
+  const day = parseInt(parts[0]);
+  const month = MONTHS[parts[1]];
+  if (isNaN(day) || month === undefined) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const target = new Date(now.getFullYear(), month, day);
+  if (target < now) target.setFullYear(now.getFullYear() + 1);
+  return Math.round((target - now) / 86400000);
+}
+
+function deadlineBadge(deadlineStr) {
+  const d = daysLeft(deadlineStr);
+  if (d === null) return '';
+  if (d === 0) return `<span class="task-tag tag-red">dziś!</span>`;
+  if (d === 1) return `<span class="task-tag tag-red">jutro</span>`;
+  if (d <= 3) return `<span class="task-tag tag-red">za ${d} dni</span>`;
+  if (d <= 7) return `<span class="task-tag tag-amber">za ${d} dni</span>`;
+  return `<span class="task-tag tag-green">za ${d} dni</span>`;
+}
+
+// --- Render ---
+function render() {
+  const visible = activeFilter === 'all' ? tasks : tasks.filter(t => t.tag === activeFilter);
+  const list = document.getElementById('task-list');
+  list.innerHTML = '';
+
+  if (!visible.length) {
+    list.innerHTML = '<div class="empty">Brak zadań w tej kategorii 🎉</div>';
+  } else {
+    visible.sort((a, b) => {
+      if (a.done !== b.done) return a.done - b.done;
+      const da = daysLeft(a.deadline) ?? 999;
+      const db = daysLeft(b.deadline) ?? 999;
+      return da - db;
+    });
+    visible.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'task-item' + (t.done ? ' done' : '');
+      el.innerHTML = `
+        <div class="task-check" onclick="toggle(${t.id})"></div>
+        <div style="flex:1">
+          <div class="task-title">
+            ${t.title}
+            <span class="task-tag ${tagClass(t.tag)}">${t.tag}</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+            ${t.deadline ? `<span class="task-meta" style="margin:0">📅 ${t.deadline}</span>` : ''}
+            ${!t.done ? deadlineBadge(t.deadline) : ''}
+          </div>
+        </div>
+        <div style="font-size:18px;cursor:pointer;opacity:0.4" onclick="removeTask(${t.id})" title="Usuń">×</div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  // Stats
+  const todo = tasks.filter(t => !t.done).length;
+  const done = tasks.filter(t => t.done).length;
+  const urgent = tasks.filter(t => !t.done && (daysLeft(t.deadline) ?? 999) <= 3).length;
+  document.getElementById('stat-todo').textContent = todo;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-urgent').textContent = urgent;
+}
+
+function renderSubjects() {
+  const el = document.getElementById('subjects-list');
+  const sorted = [...subjects].sort((a,b) => b.avg - a.avg);
+  el.innerHTML = sorted.map(s => `
+    <div class="subject-item">
+      <div class="subject-header">
+        <span class="subject-name">${s.name}</span>
+        <span class="subject-grade" style="font-weight:500;color:${s.avg >= 4.5 ? '#0F6E56' : s.avg < 3 ? '#A32D2D' : 'var(--muted)'}">${s.avg.toFixed(2)}</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${s.pct}%;background:${s.color}"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// --- Actions ---
+function toggle(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; save(); render(); renderFullList(); }
+}
+
+function removeTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save(); render(); renderFullList();
+}
+
+function addTask() {
+  const input = document.getElementById('task-input');
+  const deadlineInput = document.getElementById('task-deadline');
+  const tagSelect = document.getElementById('task-tag-select');
+  const val = input.value.trim();
+  if (!val) return;
+
+  const tag = tagSelect ? tagSelect.value : 'Inne';
+  const deadline = deadlineInput ? deadlineInput.value.trim() : '';
+  const urgent = (daysLeft(deadline) ?? 999) <= 3;
+
+  tasks.push({ id: nextId(), title: val, tag, done: false, urgent, deadline: deadline || undefined });
+  input.value = '';
+  if (deadlineInput) deadlineInput.value = '';
+  save(); render(); renderFullList();
+}
+
+let activeFilter = 'all';
+let fullFilter = 'all';
+
+function renderFullList() {
+  const list = document.getElementById('full-task-list');
+  if (!list) return;
+  let visible = [...tasks];
+  if (fullFilter === 'todo') visible = visible.filter(t => !t.done);
+  if (fullFilter === 'done') visible = visible.filter(t => t.done);
+
+  visible.sort((a, b) => {
+    if (a.done !== b.done) return a.done - b.done;
+    const da = daysLeft(a.deadline) ?? 999;
+    const db = daysLeft(b.deadline) ?? 999;
+    return da - db;
+  });
+
+  if (!visible.length) {
+    list.innerHTML = '<div class="empty">Brak zadań 🎉</div>';
+    return;
+  }
+
+  list.innerHTML = visible.map(t => `
+    <div class="task-item${t.done ? ' done' : ''}" style="margin-bottom:8px">
+      <div class="task-check" onclick="toggle(${t.id})"></div>
+      <div style="flex:1">
+        <div class="task-title">
+          ${t.title}
+          <span class="task-tag ${tagClass(t.tag)}">${t.tag}</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+          ${t.deadline ? `<span class="task-meta" style="margin:0">📅 ${t.deadline}</span>` : ''}
+          ${!t.done ? deadlineBadge(t.deadline) : '<span class="task-tag tag-green">✓ gotowe</span>'}
+        </div>
+      </div>
+      <div style="font-size:18px;cursor:pointer;opacity:0.4" onclick="removeTask(${t.id})">×</div>
+    </div>
+  `).join('');
+}
+
+function filterFull(filter, btn) {
+  fullFilter = filter;
+  document.querySelectorAll('[id^="full-btn-"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFullList();
+}
+
+function filterTasks(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// --- Timetable ---
+const timetable = [
+  [ // Poniedziałek
+    { time: '8:20', name: 'Matematyka', teacher: 'Magdalena Słuszniak' },
+    { time: '9:10', name: 'Język polski', teacher: 'Agnieszka Tomczyk' },
+    { time: '10:05', name: 'Matematyka w technice-D', teacher: 'Magdalena Słuszniak' },
+    { time: '11:00', name: 'Chemia', teacher: 'Monika Siemieniewska' },
+    { time: '11:55', name: 'Chemia', teacher: 'Monika Siemieniewska' },
+    { time: '12:45', name: 'Wychowanie fizyczne', teacher: 'Jakub Cionek' },
+    { time: '13:50', name: 'Wychowanie fizyczne', teacher: 'Jakub Cionek' },
+  ],
+  [ // Wtorek
+    { time: '7:30', name: 'Sieci komputerowe', teacher: 'Zbigniew Florczykiewicz' },
+    { time: '8:20', name: 'Sieci komputerowe', teacher: 'Zbigniew Florczykiewicz' },
+    { time: '9:10', name: 'Sieci komputerowe', teacher: 'Zbigniew Florczykiewicz' },
+    { time: '10:05', name: 'Sieci komputerowe', teacher: 'Zbigniew Florczykiewicz' },
+    { time: '11:00', name: 'Sieci komputerowe', teacher: 'Zbigniew Florczykiewicz' },
+    { time: '11:55', name: 'Chemia', teacher: 'Monika Siemieniewska' },
+    { time: '12:45', name: 'Matematyka', teacher: 'Magdalena Słuszniak' },
+    { time: '13:50', name: 'Język polski', teacher: 'Agnieszka Tomczyk' },
+  ],
+  [ // Środa
+    { time: '7:30', name: 'Projektowanie stron internetowych', teacher: 'Zdzisław Krawiec' },
+    { time: '8:20', name: 'Projektowanie stron internetowych', teacher: 'Zdzisław Krawiec' },
+    { time: '9:10', name: 'Język angielski w branży teleinformatycznej', teacher: 'Monika Siemieniewska' },
+    { time: '10:05', name: 'Informatyka', teacher: 'Anna Rajca' },
+    { time: '11:00', name: 'Projektowanie i administrowanie bazami danych', teacher: 'Adam Bochenek' },
+    { time: '11:55', name: 'Projektowanie i administrowanie bazami danych', teacher: 'Adam Bochenek' },
+    { time: '12:45', name: 'Język polski', teacher: 'Agnieszka Tomczyk' },
+    { time: '13:50', name: 'Chemia', teacher: 'Monika Siemieniewska' },
+  ],
+  [ // Czwartek
+    { time: '7:30', name: 'Programowanie aplikacji internetowych', teacher: 'Maciej Kowalczyk' },
+    { time: '8:20', name: 'Programowanie aplikacji internetowych', teacher: 'Maciej Kowalczyk' },
+    { time: '9:10', name: 'Język niemiecki', teacher: 'Magdalena Piórecka' },
+    { time: '10:05', name: 'Język niemiecki', teacher: 'Magdalena Piórecka' },
+    { time: '11:00', name: 'Matematyka', teacher: 'Magdalena Słuszniak' },
+    { time: '11:55', name: 'Matematyka', teacher: 'Magdalena Słuszniak' },
+    { time: '12:45', name: 'Zajęcia z wychowawcą', teacher: 'Anna Rajca' },
+    { time: '13:50', name: 'Wychowanie fizyczne', teacher: 'Jakub Cionek' },
+  ],
+  [ // Piątek
+    { time: '7:30', name: 'Język angielski', teacher: 'Marta Sidor' },
+    { time: '8:20', name: 'Język angielski', teacher: 'Marta Sidor' },
+    { time: '9:10', name: 'Historia', teacher: 'Jan Kotyniewicz' },
+    { time: '10:05', name: 'Matematyka w technice-D', teacher: 'Magdalena Słuszniak' },
+    { time: '11:00', name: 'Matematyka', teacher: 'Magdalena Słuszniak' },
+    { time: '11:55', name: 'Historia i teraźniejszość', teacher: 'Dariusz Janota' },
+  ],
+];
+
+const subjectColors = {
+  'Matematyka':                                    'sch-red',
+  'Matematyka w technice-D':                       'sch-red',
+  'Język polski':                                  'sch-amber',
+  'Chemia':                                        'sch-green',
+  'Wychowanie fizyczne':                           'sch-teal',
+  'Sieci komputerowe':                             'sch-purple',
+  'Projektowanie stron internetowych':             'sch-blue',
+  'Język angielski w branży teleinformatycznej':   'sch-blue',
+  'Informatyka':                                   'sch-indigo',
+  'Projektowanie i administrowanie bazami danych': 'sch-indigo',
+  'Programowanie aplikacji internetowych':         'sch-pink',
+  'Język angielski':                               'sch-teal',
+  'Język niemiecki':                               'sch-orange',
+  'Historia':                                      'sch-amber',
+  'Historia i teraźniejszość':                     'sch-amber',
+  'Zajęcia z wychowawcą':                         'sch-gray',
+};
+
+function subjectColor(name) {
+  return subjectColors[name] || 'sch-gray';
+}
+
+function showDay(dayIdx, btn) {
+  document.querySelectorAll('[id^="day-btn-"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const list = document.getElementById('schedule-list');
+  const lessons = timetable[dayIdx];
+  if (!lessons || !lessons.length) {
+    list.innerHTML = '<div class="empty">Brak lekcji 🎉</div>';
+    return;
+  }
+  list.innerHTML = lessons.map((l) => `
+    <div class="schedule-item ${subjectColor(l.name)}">
+      <div class="sch-time">${l.time}</div>
+      <div>
+        <div class="sch-name">${l.name}</div>
+        <div class="sch-room">${l.teacher}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// --- Grade Calculator ---
+function initCalc() {
+  const sel = document.getElementById('calc-subject');
+  subjects.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.avg;
+    opt.textContent = s.name + ' (śr. ' + s.avg.toFixed(2).replace('.',',') + ')';
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => document.getElementById('calc-result').style.display = 'none');
+}
+
+function calcGrade() {
+  const currentAvg = parseFloat(document.getElementById('calc-subject').value);
+  const subjectName = document.getElementById('calc-subject').options[document.getElementById('calc-subject').selectedIndex].text;
+  const target = parseFloat(document.getElementById('calc-target').value);
+  const futureCount = parseInt(document.getElementById('calc-future').value) || 1;
+
+  // Find how many grades the subject currently has (sem 2)
+  const subjectData = subjects.find(s => Math.abs(s.avg - currentAvg) < 0.01);
+  // We don't store grade count, so we estimate from avg — user can adjust "future count"
+  // Formula: needed = (target * (n + futureCount) - currentAvg * n) / futureCount
+  // We try n=1..10 to find best fit — use n that makes sense
+  // Actually: let user just pick future count; show needed grade per future ocena
+  // needed_per_grade = target + (target - currentAvg) * n / futureCount
+  // Better: total needed sum = target*(n+f) - currentAvg*n, per grade = that/f
+  // We'll just show for n=current count estimated
+
+  const resultEl = document.getElementById('calc-result');
+  const inner = document.getElementById('calc-result-inner');
+  resultEl.style.display = 'block';
+
+  // Try different assumed current grade counts
+  const rows = [];
+  for (let n = 1; n <= 8; n++) {
+    const needed = (target * (n + futureCount) - currentAvg * n) / futureCount;
+    if (needed >= 1 && needed <= 6) {
+      rows.push({ n, needed });
+    }
+  }
+
+  if (!rows.length) {
+    const needed = (target * (1 + futureCount) - currentAvg * 1) / futureCount;
+    inner.innerHTML = `
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Przy obecnej średniej <strong>${currentAvg.toFixed(2).replace('.',',')}</strong> i celu <strong>${target.toFixed(1).replace('.',',')}</strong>:</div>
+      <div style="font-size:15px;color:var(--red)">Potrzebna ocena <strong>${needed.toFixed(1).replace('.',',')}</strong> — poza skalą 1–6. Cel może być zbyt ambitny przy obecnych ocenach.</div>
+    `;
+    return;
+  }
+
+  // Show result for the most likely scenario
+  const best = rows[Math.floor(rows.length / 2)];
+  const needed = best.needed;
+  const color = needed <= 3 ? 'var(--teal)' : needed <= 4.5 ? 'var(--amber)' : needed <= 6 ? 'var(--red)' : 'var(--muted)';
+  const emoji = needed <= 3 ? '😊' : needed <= 4.5 ? '💪' : '🔥';
+  const comment = needed <= 2 ? 'Łatwe do osiągnięcia!' : needed <= 3.5 ? 'Realne przy solidnej nauce.' : needed <= 4.5 ? 'Wymagające, ale możliwe.' : needed <= 5.5 ? 'Bardzo trudne — musisz się porządnie przyłożyć.' : 'Praktycznie niemożliwe — rozważ niższy cel.';
+
+  inner.innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
+      Obecna średnia: <strong>${currentAvg.toFixed(2).replace('.',',')}</strong> · Cel: <strong>${target.toFixed(1).replace('.',',')}</strong> · Kolejne oceny: <strong>${futureCount}</strong>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">
+      <div style="font-size:42px;font-weight:500;color:${color}">${needed.toFixed(1).replace('.',',')}</div>
+      <div>
+        <div style="font-size:15px;font-weight:500">musisz dostać średnio za ocenę ${emoji}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px">${comment}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);padding-top:10px;border-top:1px solid var(--border)">
+      Jeśli dostaniesz ${futureCount > 1 ? 'po' : ''} <strong>${Math.ceil(needed)}</strong> — średnia wyniesie ~<strong>${((currentAvg * best.n + Math.ceil(needed) * futureCount) / (best.n + futureCount)).toFixed(2).replace('.',',')}</strong>
+      ${needed % 1 !== 0 ? ` · przy <strong>${Math.floor(needed)}</strong> wyniesie ~<strong>${((currentAvg * best.n + Math.floor(needed) * futureCount) / (best.n + futureCount)).toFixed(2).replace('.',',')}</strong>` : ''}
+    </div>
+  `;
+}
+
+// --- Date ---
+function updateDate() {
+  const now = new Date();
+  const days = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+  const months = ['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
+  document.getElementById('date-display').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const week = Math.ceil((now - new Date(now.getFullYear(),0,1)) / 604800000);
+  document.getElementById('week-badge').textContent = `Tydzień ${week}`;
+}
+
+// --- Init ---
+updateDate();
+render();
+renderSubjects();
+initCalc();
+renderFullList();
+const todayIdx = new Date().getDay(); // 0=Sun,1=Mon,...,6=Sat
+const scheduleDay = (todayIdx >= 1 && todayIdx <= 5) ? todayIdx - 1 : 0;
+const dayBtn = document.getElementById('day-btn-' + scheduleDay);
+if (dayBtn) dayBtn.classList.add('active');
+showDay(scheduleDay, dayBtn);
+</script>
+</body>
+</html>
